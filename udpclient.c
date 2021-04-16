@@ -13,7 +13,7 @@
 int main(int argc, char *argv[])
 {
     int sockfd, num;
-    char buf[MAXDATASIZE];
+    char rx_buf[MAXDATASIZE];
 
     struct hostent *he;
     struct sockaddr_in server, peer;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     addrlen = sizeof(server);
     while (1)
     {
-        if ((num = recvfrom(sockfd, buf, MAXDATASIZE, 0, (struct sockaddr *)&peer, &addrlen)) == -1)
+        if ((num = recvfrom(sockfd, rx_buf, MAXDATASIZE, 0, (struct sockaddr *)&peer, &addrlen)) == -1)
         {
             printf("recvfrom() error\n");
             exit(1);
@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
             printf("Receive message from otherserver.\n");
             continue;
         }
-        buf[num] = '\0';
-        printf("Server Message:%s\n", buf);
+        rx_buf[num] = '\0';
+        printf("Server Message:%s\n", rx_buf);
         break;
     }
 

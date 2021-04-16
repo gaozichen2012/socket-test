@@ -6,19 +6,21 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
+#include "server_poc.h"
 #define PORT 22
 #define MAXDATASIZE 100
 
+int sockfd;
+struct sockaddr_in server;
+struct sockaddr_in client_present;
+struct sockaddr_in client_other;
+
+socklen_t addrlen;
+int num;
+char rx_buf[MAXDATASIZE];
+
 void main(void)
 {
-    int sockfd;
-    struct sockaddr_in server;
-    struct sockaddr_in client;
-    socklen_t addrlen;
-    int num;
-    char buf[MAXDATASIZE];
-
     //socket()确定一个socket文件描述符
     //AF_INET 决定了要用ipv4地址（32位的）与端口号（16位的）的组合
     //SOCK_DGRAM 表示建立UDP链接
@@ -41,22 +43,45 @@ void main(void)
         exit(1);
     }
 
-    addrlen = sizeof(client);
+    addrlen = sizeof(client_present);
     while (1)
     {
-        num = recvfrom(sockfd, buf, MAXDATASIZE, 0, (struct sockaddr *)&client, &addrlen);
+        num = recvfrom(sockfd, rx_buf, MAXDATASIZE, 0, (struct sockaddr *)&client_present, &addrlen);
 
         if (num < 0)
         {
             perror("recvfrom() error\n");
             exit(1);
         }
+        rx_buf[num] = '\0';
 
-        buf[num] = '\0';
-        printf("You got a message (%s) from client.\nIt's ip is%s, port is %d.\n", buf, inet_ntoa(client.sin_addr), htons(client.sin_port));
-        sendto(sockfd, "Welcometo my server.\n", 22, 0, (struct sockaddr *)&client, addrlen);
-        if (!strcmp(buf, "bye"))
+        // printf("You got a message (%s) from client_present.\nIt's ip is%s, port is %d.\n", rx_buf, inet_ntoa(client_present.sin_addr), htons(client_present.sin_port));
+        server_at_unpacket_process(rx_buf);
+
+        if (!strcmp(rx_buf, "bye"))
             break;
     }
     close(sockfd);
+}
+
+int server_send_cmd2_answer(char *pCmd)
+{
+    return sendto(sockfd, pCmd, 22, 0, (struct sockaddr *)&client_present, addrlen);
+}
+
+int server_send_cmd2_other(char *pCmd)
+{
+    return sendto(sockfd, pCmd, 22, 0, (struct sockaddr *)&client_other, addrlen);
+}
+
+void identify_client_persent_or_other(void)
+{
+    if (client_present.sin_addr == "112.97.57.194")
+    {
+        client_other.sin_addr = "112.97.57.194";
+    }
+    else
+    {
+        client_other.sin_addr = "112.97.57.194";
+    }
 }
